@@ -1,0 +1,74 @@
+version: '3'
+services:
+  sentry_redis:
+    image: redis
+    container_name: sentry_redis
+    networks:
+      - sentry
+  sentry_postgres:
+    image: postgres
+    container_name: sentry_postgres
+    environment:
+      - "POSTGRES_PASSWORD=secret"
+      - "POSTGRES_USER=sentrypostgres"
+    networks:
+      - sentry
+  # docker run -d --name my-sentry -e SENTRY_SECRET_KEY='<secret-key>' --link sentry-redis:redis --link sentry-postgres:postgres sentry
+  sentry_web:
+    image: sentry
+    container_name: sentry_web
+    depends_on:
+      - sentry_redis
+      - sentry_postgres
+    command: "run web"
+    environment:
+      - "SENTRY_SECRET_KEY=gv0c6*4oh#%o*9f9bpxbn^m&xkz7&2^=!@4+m54xo3!&__m0mr"
+      - "POSTGRES_USER=sentrypostgres"
+      - "POSTGRES_PASSWORD=secret"
+      - "SENTRY_DB_USER=sentrypostgres"
+      - "SENTRY_DB_PASSWORD=secret"
+      - "SENTRY_REDIS_HOST=sentry_redis"
+      - "SENTRY_POSTGRES_HOST=sentry_postgres"
+    ports:
+      - "8080:9000"
+    networks:
+      - sentry
+  sentry_worker:
+    image: sentry
+    container_name: sentry_worker
+    depends_on:
+      - sentry_redis
+      - sentry_postgres
+    command: "run worker"
+    environment:
+      - "SENTRY_SECRET_KEY=gv0c6*4oh#%o*9f9bpxbn^m&xkz7&2^=!@4+m54xo3!&__m0mr"
+      - "POSTGRES_USER=sentrypostgres"
+      - "POSTGRES_PASSWORD=secret"
+      - "SENTRY_DB_USER=sentrypostgres"
+      - "SENTRY_DB_PASSWORD=secret"
+      - "SENTRY_REDIS_HOST=sentry_redis"
+      - "SENTRY_POSTGRES_HOST=sentry_postgres"
+    networks:
+      - sentry
+  sentry_cron:
+    image: sentry
+    container_name: sentry_cron
+    depends_on:
+      - sentry_redis
+      - sentry_postgres
+    command: "run cron"
+    environment:
+      - "SENTRY_SECRET_KEY=gv0c6*4oh#%o*9f9bpxbn^m&xkz7&2^=!@4+m54xo3!&__m0mr"
+      - "POSTGRES_USER=sentrypostgres"
+      - "POSTGRES_PASSWORD=secret"
+      - "SENTRY_DB_USER=sentrypostgres"
+      - "SENTRY_DB_PASSWORD=secret"
+      - "SENTRY_REDIS_HOST=sentry_redis"
+      - "SENTRY_POSTGRES_HOST=sentry_postgres"
+    networks:
+      - sentry
+networks:
+  sentry:
+volumes:
+  esdata1:
+    driver: local
